@@ -55,9 +55,7 @@ exports.handleRegister = async (req, res) => {
   let imageUrl =
     req.protocol +
     "://" +
-    req.hostname +
-    ":" +
-    5000 +
+    req.hostname+
     "/static/" +
     req.file.filename;
   let newUser = new userModel({
@@ -165,7 +163,7 @@ exports.handleUpdateUser = async (req, res) => {
 
   //CHECKING TO SEE IF USER SUBMITTED NEW IMAGE
   if(req.file){
-    let imageUrl =req.protocol +"://" +req.hostname +":" +5000 +"/static/" +req.file.filename;
+    let imageUrl =req.protocol +"://" +req.hostname +"/static/" +req.file.filename;
     req.body.image = {
       data: imageUrl,
       contentType: "image/png",

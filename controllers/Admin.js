@@ -38,10 +38,7 @@ exports.handleAddProduct = async (req, res) => {
   let imageUrl =
     req.protocol +
     "://" +
-    req.hostname +
-    ":" +
-    5000 +
-    "/static/products/" +
+    req.hostname +"/static/products/" +
     req.file.filename;
   let newProduct = new productModel({
     ...inputs,
