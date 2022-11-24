@@ -19,16 +19,16 @@ userRoutes.get("/info", Authorized, handleGetUserInfo);
 userRoutes.put("/update", Authorized, userDetailUpload.single("image"), handleUpdateUser);
 
 //User checkout route
-userRoutes.post("/checkout", (req, res) => {
-  console.log("working");
-  res.status(200).json({ status: true, message: "good to go" });
-});
+// userRoutes.post("/checkout", (req, res) => {
+//   console.log("working");
+//   res.status(200).json({ status: true, message: "good to go" });
+// });
 
 //User order route
-userRoutes.get("/order", (req, res) => {
-  console.log("working");
-  res.status(200).json({ status: true, message: "good to go" });
-});
+// userRoutes.get("/order", (req, res) => {
+//   console.log("working");
+//   res.status(200).json({ status: true, message: "good to go" });
+// });
 
 
 
