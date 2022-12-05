@@ -2,7 +2,7 @@ const userRoutes = require("express").Router();
 
 // USER CONTROLLERS AND MIDDLEWARES
 const { handleRegister, handleLogin, handleGetUserInfo, handleUpdateUser } = require("../controllers/Users");
-const { userDetailUpload } = require('../multer/Multer'); //for user image upload
+const { userDetailUpload, upload } = require('../multer/Multer'); //for user image upload
 const { Authorized } = require('../middlewares/Authorization')
 
 //ROUTES
@@ -10,7 +10,9 @@ const { Authorized } = require('../middlewares/Authorization')
 userRoutes.post("/login", handleLogin);
 
 //User register route
-userRoutes.post("/register", userDetailUpload.single("image"), handleRegister);
+// userRoutes.post("/register", userDetailUpload.single("image"), handleRegister);
+userRoutes.post("/register", upload.single("image"), handleRegister);
+
 
 //Get User info
 userRoutes.get("/info", Authorized, handleGetUserInfo);

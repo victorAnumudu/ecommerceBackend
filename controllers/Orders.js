@@ -23,13 +23,14 @@ exports.handleOrder = (req, res) => {
 exports.handleViewOrders = (req, res) => {
   let userId = res.locals.id;
 
-  orderModel.find({ userId }, (err, result) => {
+  orderModel.find({ user_id : userId }, (err, result) => {
     if (err) {
       return res.status(500).json({
         status: false,
         message: "Opps! something happened. Try again",
       });
     }
+    // console.log(result)
     return res.status(201).json({ status: true, message: result });
   });
 };

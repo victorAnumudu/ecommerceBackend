@@ -7,11 +7,12 @@ const jwt = require("jsonwebtoken");
 //function to check if user exist
 const { userExist, isEmpty } = require("./Functions");
 
+// cloudinary
+const { uploadToCloudinary, delFromCloudinary } = require("../multer/Multer");
 
 //function to register user
 exports.handleRegister = async (req, res) => {
   let { email, name, password, confirm_pwd } = req.body;
-
   //varible to hold error in event of any error in validation
   let errorExist;
 
@@ -36,6 +37,15 @@ exports.handleRegister = async (req, res) => {
     });
   }
 
+  //TEST TO SEE IF PASSWORD MATCHES CONFIRM PASSWORD
+  if(password != confirm_pwd){
+    fs.unlinkSync(req.file.path); // deletes the image
+    return res.status(401).json({
+      status: false,
+      message: `Password do not match`
+    });
+  }
+
   // checking if user already exists and returns failed status
   errorExist = await userExist(email);
   if (errorExist == true) {
@@ -50,14 +60,24 @@ exports.handleRegister = async (req, res) => {
       .json({ status: false, message: "Opps! something went wrong" });
   }
 
+  //SENDING THE IMAGE TO CLOUDINARY
+  let uploadedImage = await uploadToCloudinary(req.file.path);
+  // image fails to upload
+  if (!uploadedImage.status) {
+    return res
+      .status(400)
+      .json({ status: false, message: "Image fails to upload, try again" });
+  }
+
   //   TRY CREATING THE USER IF NO ERROR EXISTS
   let newPwd = bcryptjs.hashSync(password);
-  let imageUrl =
-    req.protocol +
-    "://" +
-    req.hostname+
-    "/static/" +
-    req.file.filename;
+  let imageUrl = uploadedImage.url;
+  // let imageUrl =
+  //   req.protocol +
+  //   "://" +
+  //   req.hostname+
+  //   "/static/" +
+  //   req.file.filename;
   let newUser = new userModel({
     name,
     email,
@@ -67,10 +87,18 @@ exports.handleRegister = async (req, res) => {
       contentType: "image/png",
     },
   });
-
-  newUser.save((err, result) => {
+  newUser.save(async (err, result) => {
     if (err) {
-      fs.unlinkSync(req.file.path); // deletes the image
+      // fs.unlinkSync(req.file.path); // deletes the image
+
+      // TO DELETE IMAGE FROM CLOUDINARY
+      let imageToDelete = uploadedImage.publicId.split('/')
+      let deletedImage = await delFromCloudinary(imageToDelete[imageToDelete.length-1]);
+      if (deletedImage.result != "ok") {
+        return res
+          .status(400)
+          .json({ status: false, message: "failed, try again" });
+      }
       return res.status(500).json({
         status: false,
         message: "Opps! something happened. Try again",
@@ -162,17 +190,18 @@ exports.handleUpdateUser = async (req, res) => {
   }
 
   //CHECKING TO SEE IF USER SUBMITTED NEW IMAGE
-  if(req.file){
-    let imageUrl =req.protocol +"://" +req.hostname +"/static/" +req.file.filename;
+  if (req.file) {
+    let imageUrl =
+      req.protocol + "://" + req.hostname + "/static/" + req.file.filename;
     req.body.image = {
       data: imageUrl,
       contentType: "image/png",
-    }
+    };
   }
 
   // TRYING TO UPDATE USER
   try {
-    let userImage = await userModel.findById(userId) // gets user in case there is need to delete the former image
+    let userImage = await userModel.findById(userId); // gets user in case there is need to delete the former image
     const updatedUser = await userModel.findByIdAndUpdate(userId, req.body, {
       new: true,
     });
@@ -181,13 +210,16 @@ exports.handleUpdateUser = async (req, res) => {
         fs.unlinkSync(req.file.path);
       }
       return res
-      .status(400)
-      .json({ status: false, message: "Failed to Update" });
+        .status(400)
+        .json({ status: false, message: "Failed to Update" });
     }
-    
+
     //IF SUCCESSFUL AND USER SELECTED AN IMAGE FOR UPLOAD GET THE USERS FORMER IMAGE AND REMOVE IT
-    if(req.file){
-      let oldUserImage = userImage.image.data.split('/')[userImage.image.data.split('/').length-1]
+    if (req.file) {
+      let oldUserImage =
+        userImage.image.data.split("/")[
+          userImage.image.data.split("/").length - 1
+        ];
       fs.unlinkSync(`uploads/users/${oldUserImage}`);
     }
     res.status(200).json({

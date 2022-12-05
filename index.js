@@ -2,6 +2,7 @@ const express = require("express");
 const mongoose = require("mongoose");
 const dotenv = require("dotenv").config();
 const cors = require("cors");
+const fs = require("fs");
 
 const app = express(); // initializing express
 
@@ -9,8 +10,16 @@ app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
+//creating upload folder
+if (!fs.existsSync("./upload")) {
+  fs.mkdirSync("./upload");
+}
+
 app.use("/static", express.static("uploads/users")); // allows user navigate to backend uploads/users folder
 app.use("/static/products", express.static("uploads/products")); // allows user navigate to backend uploads/users folder
+
+// app.use(express.static(__dirname + "/public"));
+app.use("/upload", express.static("upload"));
 
 const port = process.env.PORT || 5000; // default port for sever
 
@@ -34,10 +43,9 @@ mongoose
 
 //APP ROUTERS
 const userRoutes = require("./routes/Users"); //user routes
-const adminRoutes = require("./routes/Admin") // admin routes
-const orderRoutes = require("./routes/Orders") // order routes
-const productRoutes = require("./routes/Product") // order routes
-
+const adminRoutes = require("./routes/Admin"); // admin routes
+const orderRoutes = require("./routes/Orders"); // order routes
+const productRoutes = require("./routes/Product"); // order routes
 
 //APP ROUTES
 app.get("/", (req, res) =>
@@ -46,12 +54,11 @@ app.get("/", (req, res) =>
 
 app.use("/api/auth", userRoutes); // All User routes
 app.use("/api/user", userRoutes); // All User routes
-app.use("/api/user", orderRoutes) // ALL ORDER ROUTES
+app.use("/api/user", orderRoutes); // ALL ORDER ROUTES
 
-app.use("/api/admin", adminRoutes) // ALL ADMN ROUTES
+app.use("/api/admin", adminRoutes); // ALL ADMN ROUTES
 
-
-app.use("/api", productRoutes) // ALL PRODUCT ROUTES
+app.use("/api", productRoutes); // ALL PRODUCT ROUTES
 
 //sever connection
 app.listen(port, () =>

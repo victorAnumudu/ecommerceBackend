@@ -12,9 +12,9 @@ const { Authorized, isAdmin } = require("../middlewares/Authorization");
 
 adminRoutes.post("/product/add", Authorized, isAdmin, productUpload.single("image"), handleAddProduct);
 
-adminRoutes.put("/product/add/pid", Authorized, isAdmin, productUpload.single("image"), handleAddProduct);
+// adminRoutes.put("/product/add/pid", Authorized, isAdmin, productUpload.single("image"), handleAddProduct); // UPDATING A PRODUCT
 
-adminRoutes.delete("/product/add/pid", Authorized, isAdmin, handleAddProduct);
+// adminRoutes.delete("/product/add/pid", Authorized, isAdmin, handleAddProduct); // DELETING A PRODUCT
 
 
 module.exports = adminRoutes;

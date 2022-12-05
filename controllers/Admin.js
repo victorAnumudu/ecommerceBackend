@@ -5,6 +5,8 @@ const fs = require("fs");
 //function to check if user exist
 const { isEmpty } = require("./Functions");
 
+// cloudinary
+const { uploadToCloudinary, delFromCloudinary } = require("../multer/Multer");
 
 //function to register user
 exports.handleAddProduct = async (req, res) => {
@@ -34,12 +36,17 @@ exports.handleAddProduct = async (req, res) => {
     });
   }
 
+  //SENDING THE IMAGE TO CLOUDINARY
+  let uploadedImage = await uploadToCloudinary(req.file.path);
+  // image fails to upload
+  if (!uploadedImage.status) {
+    return res
+      .status(400)
+      .json({ status: false, message: "Image fails to upload, try again" });
+  }
   //   TRY CREATING THE PRODUCT
-  let imageUrl =
-    req.protocol +
-    "://" +
-    req.hostname +"/static/products/" +
-    req.file.filename;
+  let imageUrl = uploadedImage.url;
+
   let newProduct = new productModel({
     ...inputs,
     image: {
@@ -48,9 +55,18 @@ exports.handleAddProduct = async (req, res) => {
     },
   });
 
-  newProduct.save((err, result) => {
+  newProduct.save(async (err, result) => {
     if (err) {
-      fs.unlinkSync(req.file.path); // deletes the image
+      // fs.unlinkSync(req.file.path); // deletes the image
+
+      // TO DELETE IMAGE FROM CLOUDINARY
+      let imageToDelete = uploadedImage.publicId.split("/");
+      let deletedImage = await delFromCloudinary(`products/${imageToDelete[imageToDelete.length - 1]}`);
+      if (deletedImage.result != "ok") {
+        return res
+          .status(400)
+          .json({ status: false, message: "failed, try again" });
+      }
       return res.status(500).json({
         status: false,
         message: "Opps! something happened. Try again",
